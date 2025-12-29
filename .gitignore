@@ -1,0 +1,16 @@
+*.gem
+*.rbc
+/.config
+/bundle
+/.yardoc
+/_yardoc
+/coverage/
+/doc/
+/pkg/
+/spec/reports
+/tmp/
+*.swp
+*~
+.DS_Store
+.bundle/
+vendor/bundle/
