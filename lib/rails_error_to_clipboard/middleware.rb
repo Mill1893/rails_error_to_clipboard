@@ -9,13 +9,18 @@ module RailsErrorToClipboard
     def call(env)
       status, headers, body = @app.call(env)
 
+      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
+
       return [status, headers, body] unless should_inject?(status, headers, env)
 
-      modified_body = inject_button(body, env)
+      exception = env['action_dispatch.exception'] || env['rack.exception']
+      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Exception: #{exception.inspect}"
+
+      modified_body = inject_button(body, exception, env)
       return [status, headers, body] if modified_body.nil?
 
       new_body = Array(modified_body)
-      headers["Content-Length"] = new_body.sum(&:bytesize).to_s
+      headers['Content-Length'] = new_body.sum(&:bytesize).to_s
 
       [status, headers, new_body]
     end
@@ -31,20 +36,18 @@ module RailsErrorToClipboard
     end
 
     def html_content?(headers)
-      content_type = headers["Content-Type"]
+      content_type = headers['Content-Type']
       return false unless content_type
 
-      content_type.include?("text/html")
+      content_type.include?('text/html')
     end
 
-    def inject_button(body, env)
+    def inject_button(body, exception, env)
       body_content = read_body(body)
       return nil if body_content.nil?
-
-      exception = env["action_dispatch.exception"]
-      request = env["action_dispatch.request"]
-
       return nil if exception.nil?
+
+      request = env['action_dispatch.request']
 
       markdown = MarkdownFormatter.new(exception, request).format
       injector = ButtonInjector.new(configuration)
@@ -57,7 +60,7 @@ module RailsErrorToClipboard
       body.close if body.respond_to?(:close)
 
       strings.join
-    rescue
+    rescue StandardError
       nil
     end
 
