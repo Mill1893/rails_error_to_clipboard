@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'action_controller/errors'
+
 module RailsErrorToClipboard
   class Middleware
     def initialize(app)
@@ -9,14 +11,9 @@ module RailsErrorToClipboard
     def call(env)
       status, headers, body = @app.call(env)
 
-      puts "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type'].inspect}"
-
       return [status, headers, body] unless should_inject?(status, headers)
 
       exception = env['action_dispatch.exception'] || env['rack.exception']
-      puts "[rails_error_to_clipboard] Exception: #{exception.inspect}"
-      puts '[rails_error_to_clipboard] should_inject? returned true, attempting injection'
-
       modified_body = inject_button(body, exception, env)
       return [status, headers, body] if modified_body.nil?
 
@@ -44,27 +41,28 @@ module RailsErrorToClipboard
     end
 
     def inject_button(body, exception, env)
-      puts '[rails_error_to_clipboard] inject_button called'
-
       body_content = read_body(body)
       return nil if body_content.nil?
 
-      puts "[rails_error_to_clipboard] Body content length: #{body_content.length}"
-
-      return nil if exception.nil?
-
-      puts "[rails_error_to_clipboard] Exception: #{exception.class}: #{exception.message}"
+      unless exception
+        exception = create_synthetic_exception(@app.call(env).first, env)
+        return nil unless exception
+      end
 
       request = env['action_dispatch.request']
-
       markdown = MarkdownFormatter.new(exception, request).format
-      puts "[rails_error_to_clipboard] Markdown length: #{markdown.length}"
-
       injector = ButtonInjector.new(configuration)
-      result = injector.inject(body_content, markdown)
-      puts "[rails_error_to_clipboard] Injection result: #{result ? 'success' : 'nil'}"
+      injector.inject(body_content, markdown)
+    end
 
-      result
+    def create_synthetic_exception(status_code, env)
+      case status_code.to_i
+      when 404
+        path = env['PATH_INFO']
+        RoutingError.new("No route matches #{env['REQUEST_METHOD']} \"#{path}\"")
+      when 500
+        RuntimeError.new('Internal server error')
+      end
     end
 
     def read_body(body)

@@ -7,11 +7,18 @@ module RailsErrorToClipboard
     end
 
     def inject(html, markdown)
-      return html if html.nil? || !html.include?("</body>")
+      return html if html.nil? || html.empty?
+
+      return html unless html.include?('</body>') || html.include?('</html>')
 
       button_html = generate_button_html(markdown)
       html = html.dup
-      html.sub!(%r{</body>}i) { "#{button_html}</body>" }
+
+      if html.include?('</body>')
+        html.sub!(%r{</body>}i) { "#{button_html}</body>" }
+      else
+        html.sub!(%r{</html>}i) { "#{button_html}</html>" }
+      end
 
       html
     end
@@ -54,11 +61,11 @@ module RailsErrorToClipboard
 
     def escape_js(text)
       result = text.dup
-      result.gsub!("\\") { "\\\\" }
-      result.gsub!("`") { '\\`' }
-      result.gsub!("$") { '\\$' }
-      result.gsub!("<") { '\\<' }
-      result.gsub!(">") { '\\>' }
+      result.gsub!('\\') { '\\\\' }
+      result.gsub!('`') { '\\`' }
+      result.gsub!('$') { '\\$' }
+      result.gsub!('<') { '\\<' }
+      result.gsub!('>') { '\\>' }
       result
     end
 
