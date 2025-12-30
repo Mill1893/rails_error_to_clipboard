@@ -7,19 +7,27 @@ module RailsErrorToClipboard
     end
 
     def inject(html, markdown)
+      warn "[button_injector] Called with html length: #{html&.length}, markdown length: #{markdown.length}"
       return html if html.nil? || html.empty?
 
-      return html unless html.include?('</body>') || html.include?('</html>')
+      has_body = html.include?('</body>')
+      has_html = html.include?('</html>')
+      warn "[button_injector] Has </body>: #{has_body}, Has </html>: #{has_html}"
+
+      return html unless has_body || has_html
 
       button_html = generate_button_html(markdown)
+      warn "[button_injector] Button HTML length: #{button_html.length}"
+
       html = html.dup
 
-      if html.include?('</body>')
+      if has_body
         html.sub!(%r{</body>}i) { "#{button_html}</body>" }
       else
         html.sub!(%r{</html>}i) { "#{button_html}</html>" }
       end
 
+      warn "[button_injector] Result length: #{html.length}"
       html
     end
 

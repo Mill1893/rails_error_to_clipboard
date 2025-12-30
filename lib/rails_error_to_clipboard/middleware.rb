@@ -42,6 +42,9 @@ module RailsErrorToClipboard
       body_content = read_body(body)
       return nil if body_content.nil?
 
+      warn "[rails_error_to_clipboard] Body has </body>: #{body_content.include?('</body>')}"
+      warn "[rails_error_to_clipboard] Body has </html>: #{body_content.include?('</html>')}"
+
       unless exception
         exception = create_synthetic_exception(@app.call(env).first, env)
         return nil unless exception
@@ -50,7 +53,11 @@ module RailsErrorToClipboard
       request = env['action_dispatch.request']
       markdown = MarkdownFormatter.new(exception, request).format
       injector = ButtonInjector.new(configuration)
-      injector.inject(body_content, markdown)
+      result = injector.inject(body_content, markdown)
+
+      warn "[rails_error_to_clipboard] Injection result: #{result ? 'success' : 'nil'}"
+
+      result
     end
 
     def create_synthetic_exception(status_code, env)
