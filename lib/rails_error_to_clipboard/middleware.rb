@@ -7,8 +7,6 @@ module RailsErrorToClipboard
     end
 
     def call(env)
-      puts "[rails_error_to_clipboard] Middleware#call invoked - status: #{@app.call(env).first}"
-
       status, headers, body = @app.call(env)
 
       puts "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
