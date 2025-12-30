@@ -6,6 +6,6 @@ module RailsErrorToClipboard
       RailsErrorToClipboard.configure {}
     end
 
-    config.middleware.insert_after(ActionDispatch::Executor, RailsErrorToClipboard::Middleware)
+    config.app_middleware.insert_after(ActionDispatch::Executor, RailsErrorToClipboard::Middleware)
   end
 end
