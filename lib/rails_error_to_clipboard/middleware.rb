@@ -9,14 +9,13 @@ module RailsErrorToClipboard
     def call(env)
       status, headers, body = @app.call(env)
 
-      puts "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
+      puts "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type'].inspect}"
 
       return [status, headers, body] unless should_inject?(status, headers)
 
       exception = env['action_dispatch.exception'] || env['rack.exception']
-      puts "[rails_error_to_clipboard] Exception found: #{!exception.nil?}"
-
-      puts "[rails_error_to_clipboard] Keys in env: #{env.keys.grep(/exception|error/i).join(', ')}" if exception.nil?
+      puts "[rails_error_to_clipboard] Exception: #{exception.inspect}"
+      puts '[rails_error_to_clipboard] should_inject? returned true, attempting injection'
 
       modified_body = inject_button(body, exception, env)
       return [status, headers, body] if modified_body.nil?
@@ -39,7 +38,7 @@ module RailsErrorToClipboard
 
     def html_content?(headers)
       content_type = headers['Content-Type']
-      return false unless content_type
+      return true if content_type.nil? || content_type.empty?
 
       content_type.include?('text/html')
     end
