@@ -1,0 +1,8 @@
+Description:
+  Install rails_error_to_clipboard configuration
+
+Example:
+  rails generate rails_error_to_clipboard:install
+
+  This creates:
+    config/initializers/rails_error_to_clipboard.rb

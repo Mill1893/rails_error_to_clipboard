@@ -25,3 +25,4 @@ module RailsErrorToClipboard
 end
 
 require 'rails_error_to_clipboard/railtie' if defined?(Rails)
+require 'rails_error_to_clipboard/engine' if defined?(Rails)
