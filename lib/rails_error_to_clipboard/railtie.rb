@@ -21,9 +21,11 @@ module RailsErrorToClipboard
 
       def call(env)
         puts "[rails_error_to_clipboard] ExceptionWrapper#call invoked for #{env['PATH_INFO']}"
-        @app.call(env)
+        result = @app.call(env)
+        puts '[rails_error_to_clipboard] @app.call returned normally'
+        result
       rescue StandardError => e
-        puts "[rails_error_to_clipboard] Caught exception: #{e.class}"
+        puts "[rails_error_to_clipboard] Caught exception: #{e.class}: #{e.message}"
         status = e.respond_to?(:status) ? e.status : 500
         status = 500 unless status.to_i.between?(400, 599)
 
