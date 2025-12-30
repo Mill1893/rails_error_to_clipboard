@@ -65,7 +65,7 @@ module RailsErrorToClipboard
     end
 
     puts '[rails_error_to_clipboard] Adding ExceptionWrapper to middleware stack'
-    config.app_middleware.use ExceptionWrapper
+    config.app_middleware.insert_before(ActionDispatch::ShowExceptions, ExceptionWrapper)
   end
 end
 
