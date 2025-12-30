@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'action_controller/errors'
-
 module RailsErrorToClipboard
   class Middleware
     def initialize(app)
@@ -59,7 +57,7 @@ module RailsErrorToClipboard
       case status_code.to_i
       when 404
         path = env['PATH_INFO']
-        RoutingError.new("No route matches #{env['REQUEST_METHOD']} \"#{path}\"")
+        ActionController::RoutingError.new("No route matches #{env['REQUEST_METHOD']} \"#{path}\"")
       when 500
         RuntimeError.new('Internal server error')
       end
