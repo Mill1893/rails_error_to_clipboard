@@ -1,19 +1,29 @@
 # frozen_string_literal: true
 
+puts '[rails_error_to_clipboard] Loading railtie...'
+
 module RailsErrorToClipboard
   class Railtie < Rails::Railtie
+    puts '[rails_error_to_clipboard] Railtie class defined'
+
     config.before_configuration do
+      puts '[rails_error_to_clipboard] before_configuration'
       RailsErrorToClipboard.configure {}
     end
 
     class ExceptionWrapper
+      puts '[rails_error_to_clipboard] ExceptionWrapper class defined'
+
       def initialize(app)
         @app = app
+        puts '[rails_error_to_clipboard] ExceptionWrapper initialized'
       end
 
       def call(env)
+        puts "[rails_error_to_clipboard] ExceptionWrapper#call invoked for #{env['PATH_INFO']}"
         @app.call(env)
       rescue StandardError => e
+        puts "[rails_error_to_clipboard] Caught exception: #{e.class}"
         status = e.respond_to?(:status) ? e.status : 500
         status = 500 unless status.to_i.between?(400, 599)
 
@@ -35,9 +45,9 @@ module RailsErrorToClipboard
           <!DOCTYPE html>
           <html>
           <head>
-            <title>#{status} - Error</title>
+            <title>#{status} Error</title>
             <style>
-              body { font-family: system-ui, sans-serif; padding: 2rem; }
+              body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
               h1 { color: #dc2626; }
               pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; }
             </style>
@@ -54,6 +64,9 @@ module RailsErrorToClipboard
       end
     end
 
+    puts '[rails_error_to_clipboard] Adding ExceptionWrapper to middleware stack'
     config.app_middleware.use ExceptionWrapper
   end
 end
+
+puts '[rails_error_to_clipboard] Railtie loading complete'
