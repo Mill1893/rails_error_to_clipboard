@@ -31,7 +31,7 @@ module RailsErrorToClipboard
 
     private
 
-    def should_inject?(status, headers, _env)
+    def should_inject?(status, headers)
       return false unless configuration.enabled
       return false unless status.to_i >= 400
       return false unless html_content?(headers)
