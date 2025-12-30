@@ -8,8 +8,6 @@ require 'rails_error_to_clipboard/button_injector'
 
 module RailsErrorToClipboard
   class << self
-    attr_reader :configuration
-
     def configure
       @configuration ||= Configuration.default
       yield(@configuration)
@@ -25,3 +23,5 @@ module RailsErrorToClipboard
     end
   end
 end
+
+require 'rails_error_to_clipboard/railtie' if defined?(Rails)
