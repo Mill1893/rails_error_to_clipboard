@@ -11,10 +11,14 @@ module RailsErrorToClipboard
 
       RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
 
-      return [status, headers, body] unless should_inject?(status, headers, env)
+      return [status, headers, body] unless should_inject?(status, headers)
 
       exception = env['action_dispatch.exception'] || env['rack.exception']
-      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Exception: #{exception.inspect}"
+      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Exception found: #{!exception.nil?}"
+
+      if exception.nil?
+        RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Keys in env: #{env.keys.grep(/exception|error/i).join(', ')}"
+      end
 
       modified_body = inject_button(body, exception, env)
       return [status, headers, body] if modified_body.nil?

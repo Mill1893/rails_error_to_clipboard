@@ -2,10 +2,15 @@
 
 module RailsErrorToClipboard
   class Railtie < Rails::Railtie
-    config.before_configuration do
-      RailsErrorToClipboard.configure {}
+    console do
+      puts '[rails_error_to_clipboard] Gem loaded successfully'
     end
 
-    config.app_middleware.insert_after(ActionDispatch::Executor, RailsErrorToClipboard::Middleware)
+    config.before_configuration do
+      RailsErrorToClipboard.configure {}
+      Rails.logger&.info '[rails_error_to_clipboard] Railtie initialized'
+    end
+
+    config.app_middleware.insert_before(ActionDispatch::ShowExceptions, RailsErrorToClipboard::Middleware)
   end
 end
