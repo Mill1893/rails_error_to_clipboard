@@ -2,13 +2,14 @@
 
 module RailsErrorToClipboard
   class Configuration
-    attr_accessor :enabled, :button_text, :button_css_class, :position
+    attr_accessor :enabled, :button_text, :button_css_class, :position, :logger
 
     def initialize
       @enabled = true
-      @button_text = "Copy for AI"
-      @button_css_class = "rails-error-to-clipboard-button"
-      @position = "bottom-right"
+      @button_text = 'Copy for AI'
+      @button_css_class = 'rails-error-to-clipboard-button'
+      @position = 'bottom-right'
+      @logger = nil
     end
 
     def self.default
