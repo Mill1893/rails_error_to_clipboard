@@ -1,36 +1,34 @@
 # frozen_string_literal: true
 
-puts '[rails_error_to_clipboard] Loading railtie...'
-
 module RailsErrorToClipboard
   class Railtie < Rails::Railtie
-    puts '[rails_error_to_clipboard] Railtie class defined'
+    console do
+      puts '[rails_error_to_clipboard] Gem loaded successfully'
+    end
 
     config.before_configuration do
-      puts '[rails_error_to_clipboard] before_configuration'
       RailsErrorToClipboard.configure {}
     end
 
-    class ExceptionWrapper
-      puts '[rails_error_to_clipboard] ExceptionWrapper class defined'
+    config.after_initialize do
+      Rails.application.config.exceptions_app = lambda do |env|
+        request = ActionDispatch::Request.new(env)
+        exception = env['action_dispatch.exception']
 
-      def initialize(app)
-        @app = app
-        puts '[rails_error_to_clipboard] ExceptionWrapper initialized'
-      end
+        status = case exception
+                 when ActionController::RoutingError then 404
+                 when ActionController::InvalidAuthenticityToken then 422
+                 when ::ActiveRecord::RecordNotFound then 404
+                 when ::ActiveRecord::RecordInvalid then 422
+                 when StandardError
+                   exception.respond_to?(:status) ? exception.status : 500
+                 else
+                   500
+                 end
 
-      def call(env)
-        puts "[rails_error_to_clipboard] ExceptionWrapper#call invoked for #{env['PATH_INFO']}"
-        result = @app.call(env)
-        puts '[rails_error_to_clipboard] @app.call returned normally'
-        result
-      rescue StandardError => e
-        puts "[rails_error_to_clipboard] Caught exception: #{e.class}: #{e.message}"
-        status = e.respond_to?(:status) ? e.status : 500
         status = 500 unless status.to_i.between?(400, 599)
 
-        request = ActionDispatch::Request.new(env)
-        body = render_exception_page(e, request, status)
+        body = render_exception_page(exception, request, status)
 
         headers = {
           'Content-Type' => 'text/html; charset=utf-8',
@@ -39,36 +37,37 @@ module RailsErrorToClipboard
 
         [status, headers, [body]]
       end
-
-      private
-
-      def render_exception_page(exception, request, status)
-        html = <<~HTML
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>#{status} Error</title>
-            <style>
-              body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
-              h1 { color: #dc2626; }
-              pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; }
-            </style>
-          </head>
-          <body>
-            <h1>#{exception.class}: #{exception.message}</h1>
-            <pre>#{exception.backtrace.first(20).join("\n")}</pre>
-          </body>
-          </html>
-        HTML
-
-        markdown = MarkdownFormatter.new(exception, request).format
-        ButtonInjector.new(RailsErrorToClipboard.configuration).inject(html, markdown)
-      end
     end
 
-    puts '[rails_error_to_clipboard] Adding ExceptionWrapper to middleware stack'
-    config.app_middleware.insert_before(ActionDispatch::ShowExceptions, ExceptionWrapper)
+    private
+
+    def render_exception_page(exception, request, status)
+      html = <<~HTML
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>#{status} Error</title>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 900px; margin: 0 auto; line-height: 1.6; }
+            h1 { color: #dc2626; margin-bottom: 1rem; }
+            .error-info { background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+            .trace { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 12px; font-family: monospace; }
+            .trace-line { white-space: pre; }
+          </style>
+        </head>
+        <body>
+          <h1>#{exception.class}: #{CGI.escapeHTML(exception.message.to_s)}</h1>
+          <div class="error-info">
+            <strong>Request:</strong> #{request.request_method} #{request.path}
+          </div>
+          <h2>Stack Trace</h2>
+          <pre class="trace">#{CGI.escapeHTML(exception.backtrace.first(30).join("\n"))}</pre>
+        </body>
+        </html>
+      HTML
+
+      markdown = MarkdownFormatter.new(exception, request).format
+      ButtonInjector.new(RailsErrorToClipboard.configuration).inject(html, markdown)
+    end
   end
 end
-
-puts '[rails_error_to_clipboard] Railtie loading complete'
