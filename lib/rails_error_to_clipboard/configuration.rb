@@ -6,9 +6,9 @@ module RailsErrorToClipboard
 
     def initialize
       @enabled = true
-      @button_text = 'Copy for AI'
-      @button_css_class = 'rails-error-to-clipboard-button'
-      @position = 'bottom-right'
+      @button_text = "Copy for AI"
+      @button_css_class = "rails-error-to-clipboard-button"
+      @position = "bottom-right"
     end
 
     def self.default

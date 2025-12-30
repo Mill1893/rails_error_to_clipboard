@@ -4,7 +4,7 @@ module RailsErrorToClipboard
   module Generators
     class InstallGenerator < Rails::Generators::Base
       def create_initializer
-        create_file 'config/initializers/rails_error_to_clipboard.rb', <<~RUBY
+        create_file "config/initializers/rails_error_to_clipboard.rb", <<~RUBY
           # frozen_string_literal: true
 
           RailsErrorToClipboard.configure do |config|

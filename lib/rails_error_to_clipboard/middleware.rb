@@ -11,10 +11,13 @@ module RailsErrorToClipboard
 
       return [status, headers, body] unless should_inject?(status, headers, env)
 
-      body = inject_button(body, env)
-      headers['Content-Length'] = body.sum(&:bytesize).to_s
+      modified_body = inject_button(body, env)
+      return [status, headers, body] if modified_body.nil?
 
-      [status, headers, body]
+      new_body = Array(modified_body)
+      headers["Content-Length"] = new_body.sum(&:bytesize).to_s
+
+      [status, headers, new_body]
     end
 
     private
@@ -28,18 +31,20 @@ module RailsErrorToClipboard
     end
 
     def html_content?(headers)
-      content_type = headers['Content-Type']
+      content_type = headers["Content-Type"]
       return false unless content_type
 
-      content_type.include?('text/html')
+      content_type.include?("text/html")
     end
 
     def inject_button(body, env)
       body_content = read_body(body)
-      return body if body_content.nil?
+      return nil if body_content.nil?
 
-      exception = env['action_dispatch.exception']
-      request = env['action_dispatch.request']
+      exception = env["action_dispatch.exception"]
+      request = env["action_dispatch.request"]
+
+      return nil if exception.nil?
 
       markdown = MarkdownFormatter.new(exception, request).format
       injector = ButtonInjector.new(configuration)
@@ -52,7 +57,7 @@ module RailsErrorToClipboard
       body.close if body.respond_to?(:close)
 
       strings.join
-    rescue StandardError
+    rescue
       nil
     end
 

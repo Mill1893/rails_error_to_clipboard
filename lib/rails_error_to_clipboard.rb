@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'rails_error_to_clipboard/version'
-require 'rails_error_to_clipboard/configuration'
-require 'rails_error_to_clipboard/markdown_formatter'
-require 'rails_error_to_clipboard/middleware'
-require 'rails_error_to_clipboard/button_injector'
+require "rails_error_to_clipboard/version"
+require "rails_error_to_clipboard/configuration"
+require "rails_error_to_clipboard/markdown_formatter"
+require "rails_error_to_clipboard/middleware"
+require "rails_error_to_clipboard/button_injector"
 
 module RailsErrorToClipboard
   class << self
@@ -24,5 +24,5 @@ module RailsErrorToClipboard
   end
 end
 
-require 'rails_error_to_clipboard/railtie' if defined?(Rails)
-require 'rails_error_to_clipboard/engine' if defined?(Rails)
+require "rails_error_to_clipboard/railtie" if defined?(Rails)
+require "rails_error_to_clipboard/engine" if defined?(Rails)
