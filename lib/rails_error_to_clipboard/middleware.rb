@@ -7,18 +7,18 @@ module RailsErrorToClipboard
     end
 
     def call(env)
+      puts "[rails_error_to_clipboard] Middleware#call invoked - status: #{@app.call(env).first}"
+
       status, headers, body = @app.call(env)
 
-      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
+      puts "[rails_error_to_clipboard] Status: #{status}, Content-Type: #{headers['Content-Type']}"
 
       return [status, headers, body] unless should_inject?(status, headers)
 
       exception = env['action_dispatch.exception'] || env['rack.exception']
-      RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Exception found: #{!exception.nil?}"
+      puts "[rails_error_to_clipboard] Exception found: #{!exception.nil?}"
 
-      if exception.nil?
-        RailsErrorToClipboard.configuration.logger&.debug "[rails_error_to_clipboard] Keys in env: #{env.keys.grep(/exception|error/i).join(', ')}"
-      end
+      puts "[rails_error_to_clipboard] Keys in env: #{env.keys.grep(/exception|error/i).join(', ')}" if exception.nil?
 
       modified_body = inject_button(body, exception, env)
       return [status, headers, body] if modified_body.nil?
@@ -47,15 +47,27 @@ module RailsErrorToClipboard
     end
 
     def inject_button(body, exception, env)
+      puts '[rails_error_to_clipboard] inject_button called'
+
       body_content = read_body(body)
       return nil if body_content.nil?
+
+      puts "[rails_error_to_clipboard] Body content length: #{body_content.length}"
+
       return nil if exception.nil?
+
+      puts "[rails_error_to_clipboard] Exception: #{exception.class}: #{exception.message}"
 
       request = env['action_dispatch.request']
 
       markdown = MarkdownFormatter.new(exception, request).format
+      puts "[rails_error_to_clipboard] Markdown length: #{markdown.length}"
+
       injector = ButtonInjector.new(configuration)
-      injector.inject(body_content, markdown)
+      result = injector.inject(body_content, markdown)
+      puts "[rails_error_to_clipboard] Injection result: #{result ? 'success' : 'nil'}"
+
+      result
     end
 
     def read_body(body)
